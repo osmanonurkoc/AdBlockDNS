@@ -1,7 +1,8 @@
-
 # 🛡️ System Security Manager (AdBlock & DNS Tool)
 
 A lightweight, portable, and open-source PowerShell tool designed to enhance your system's privacy and security. It allows you to easily switch DNS providers and block advertisements/trackers system-wide using the Hosts file.
+
+[![Download Latest Release](https://img.shields.io/badge/Download-Latest_Release-2ea44f?style=for-the-badge&logo=github&logoColor=white)](https://github.com/osmanonurkoc/AdBlockDNS/releases/latest)
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows-0078D4.svg)
@@ -30,7 +31,7 @@ A lightweight, portable, and open-source PowerShell tool designed to enhance you
 - **Permissions:** Must be run as **Administrator** (required to modify Network settings and System files).
 
 ### Installation
-1. Download the `AdBlockDNS.ps1` file from this repository.
+1. Download the latest `AdBlockDNS.ps1` from the **[Releases Page](https://github.com/osmanonurkoc/AdBlockDNS/releases/latest)**.
 2. Right-click the file and select **Run with PowerShell**.
    - *Note:* If you encounter an Execution Policy error, you may need to unblock the file or run:
      ```powershell
