@@ -16,7 +16,7 @@ $Params = @{
     Company      = "Osman Onur Koc"
     Product      = "AdBlockDNS Manager"
     Copyright    = "www.osmanonurkoc.com"
-    Version      = "5.0.0.0"
+    Version      = "1.0.0.0"
     NoConsole    = $true
     STA          = $true  # Critical for WPF
     requireAdmin = $true  # <--- FIXED: The correct parameter name is 'requireAdmin'
@@ -34,7 +34,7 @@ Write-Host "Starting compilation process..." -ForegroundColor Cyan
 try {
     # Invoke-PS2EXE uses the splatted params
     Invoke-PS2EXE @Params
-    Write-Host "`nSUCCESS: .exe created successfully!" -ForegroundColor Green
+    Write-Host "`nSUCCESS: AdBlockDNS.exe created successfully!" -ForegroundColor Green
 }
 catch {
     Write-Error "Error occurred during compilation: $_"
