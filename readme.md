@@ -30,10 +30,16 @@ A lightweight, portable, and open-source PowerShell tool designed to enhance you
 - **OS:** Windows 10 or Windows 11 (64-bit required).
 - **Permissions:** Must be run as **Administrator** (required to modify Network settings and System files).
 
-### Installation
-1. Download the latest `AdBlockDNS.ps1` from the **[Releases Page](https://github.com/osmanonurkoc/AdBlockDNS/releases/latest)**.
-2. Right-click the file and select **Run with PowerShell**.
-   - *Note:* If you encounter an Execution Policy error, you may need to unblock the file or run:
+### Installation & Usage
+
+#### Option 1: Using the Executable (Recommended)
+1. Download the latest `AdBlockDNS.exe` from the **[Releases Page](https://github.com/osmanonurkoc/AdBlockDNS/releases/latest)**.
+2. Double-click `AdBlockDNS.exe` to run.
+
+#### Option 2: Running the Script (For Developers)
+1. Download the source code.
+2. Right-click `AdBlockDNS.ps1` and select **Run with PowerShell**.
+   * *Note:* If you encounter an Execution Policy error, run this command in PowerShell once:
      ```powershell
      Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
      ```
