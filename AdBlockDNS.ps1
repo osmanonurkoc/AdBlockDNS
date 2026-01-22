@@ -1,16 +1,18 @@
 <#
     .SYNOPSIS
-    System DNS & Hosts AdBlocker - Ultimate Edition
+    System DNS & Hosts AdBlocker
 
     .DESCRIPTION
-    A lightweight, GUI-based tool to manage system DNS settings and block ads/trackers
-    by modifying the Windows Hosts file.
+    A lightweight, GUI-based tool to manage system DNS settings and block ads/trackers.
 
     Features:
     - Smart Merge: Preserves user's existing custom entries in the hosts file.
     - Backup System: Automatically creates backups before modification.
     - Theme Engine: Auto-detects System Light/Dark mode (Apps & System).
     - Zero Dependencies: Runs purely on PowerShell + .NET (WPF).
+    Fixes:
+    - Improved detection logic to distinguish between Static DNS and DHCP-assigned DNS.
+    - Applies settings to all physical network adapters (Ethernet & Wi-Fi) simultaneously.
 
     .AUTHOR
     @osmanonurkoc
@@ -484,22 +486,43 @@ $Window.Add_Loaded({
     # Check DNS
     try {
         $StatusDNS.Text = "Status: Inactive (DHCP)"
-        $activeAdapter = Get-NetAdapter | Where-Object Status -eq 'Up' | Select-Object -First 1
+
+        # Try to find an active physical adapter first, then fallback to any physical
+        $activeAdapter = Get-NetAdapter | Where-Object { $_.HardwareInterface -eq $true -and $_.Status -eq 'Up' } | Select-Object -First 1
+        if (-not $activeAdapter) {
+            $activeAdapter = Get-NetAdapter | Where-Object { $_.HardwareInterface -eq $true } | Select-Object -First 1
+        }
+
         if ($activeAdapter) {
             $currentIPs = (Get-DnsClientServerAddress -InterfaceIndex $activeAdapter.InterfaceIndex).ServerAddresses -join ","
+
+            # Verify if it is TRULY static via Registry (Standard IPs can confuse the check if router gives the same IP via DHCP)
+            $isStatic = $false
+            try {
+                $regPath = "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\$($activeAdapter.InterfaceGuid)"
+                $ns = (Get-ItemProperty -Path $regPath -Name "NameServer" -ErrorAction SilentlyContinue).NameServer
+                if (-not [string]::IsNullOrWhiteSpace($ns)) { $isStatic = $true }
+            } catch {}
+
             $found = $false
-            foreach ($key in $script:DNSProviders.Keys) {
-                if ($script:DNSProviders[$key] -eq $currentIPs) {
-                    $ComboDNS.SelectedItem = $key
-                    $ToggleDNS.IsChecked = $true
-                    $StatusDNS.Text = "Status: Active ($key)"
-                    $StatusDNS.Foreground = $Res["GreenBrush"]
-                    $found = $true
-                    break
+            if ($isStatic) {
+                foreach ($key in $script:DNSProviders.Keys) {
+                    if ($script:DNSProviders[$key] -eq $currentIPs) {
+                        $ComboDNS.SelectedItem = $key
+                        $ToggleDNS.IsChecked = $true
+                        $StatusDNS.Text = "Status: Active ($key)"
+                        $StatusDNS.Foreground = $Res["GreenBrush"]
+                        $found = $true
+                        break
+                    }
                 }
-            }
-            if (-not $found -and $currentIPs -ne "") {
-                 $StatusDNS.Text = "Status: Custom ($currentIPs)"
+                if (-not $found -and $currentIPs -ne "") {
+                     $StatusDNS.Text = "Status: Custom ($currentIPs)"
+                }
+            } else {
+                 # It is DHCP, even if IPs look familiar (e.g. Router assigning 8.8.8.8)
+                 $StatusDNS.Text = "Status: Inactive (DHCP)"
+                 $StatusDNS.Foreground = $Res["SubTextBrush"]
             }
         }
     } catch {
@@ -577,11 +600,14 @@ $BtnSave.Add_Click({
     $TxtGlobalStatus.Foreground = $Res["OrangeBrush"]
     [System.Windows.Forms.Application]::DoEvents()
 
+    # Get all physical adapters (Ethernet & Wifi)
+    $targetAdapters = Get-NetAdapter | Where-Object { $_.HardwareInterface -eq $true }
+
     # 1. Apply DNS
     if ($ToggleDNS.IsChecked) {
         $sel = $ComboDNS.SelectedItem
         if ($sel -eq "Default (DHCP)") {
-             Get-NetAdapter | Where-Object Status -eq 'Up' | ForEach-Object {
+             $targetAdapters | ForEach-Object {
                 Set-DnsClientServerAddress -InterfaceIndex $_.InterfaceIndex -ResetServerAddresses -ErrorAction SilentlyContinue
             }
             $StatusDNS.Text = "Status: Inactive (DHCP)"
@@ -589,14 +615,15 @@ $BtnSave.Add_Click({
         }
         elseif ($script:DNSProviders.Contains($sel)) {
             $ips = $script:DNSProviders[$sel] -split ","
-            Get-NetAdapter | Where-Object Status -eq 'Up' | ForEach-Object {
+            $targetAdapters | ForEach-Object {
                 Set-DnsClientServerAddress -InterfaceIndex $_.InterfaceIndex -ServerAddresses $ips -ErrorAction SilentlyContinue
             }
             $StatusDNS.Text = "Status: Active ($sel)"
             $StatusDNS.Foreground = $Res["GreenBrush"]
         }
     } else {
-        Get-NetAdapter | Where-Object Status -eq 'Up' | ForEach-Object {
+        # Force Reset on All Adapters
+        $targetAdapters | ForEach-Object {
             Set-DnsClientServerAddress -InterfaceIndex $_.InterfaceIndex -ResetServerAddresses -ErrorAction SilentlyContinue
         }
         $StatusDNS.Text = "Status: Inactive (DHCP)"
