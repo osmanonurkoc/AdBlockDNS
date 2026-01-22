@@ -88,6 +88,7 @@ $script:DNSProviders = [ordered]@{
     "AdGuard Default"  = "94.140.14.14,94.140.15.15"
     "OpenDNS Home"     = "208.67.222.222,208.67.220.220"
     "Quad9"            = "9.9.9.9,149.112.112.112"
+    "Control-D"        = "76.76.2.2,76.76.10.2"
 }
 
 # Sources for AdBlocking hosts files
